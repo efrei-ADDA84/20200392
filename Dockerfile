@@ -1,4 +1,4 @@
-FROM busybox:latest
+FROM busybox:stable
 
 COPY wrapper.sh /wrapper.sh
 
