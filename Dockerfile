@@ -1,8 +1,7 @@
-FROM debian:stretch-slim
+FROM busybox:latest
 
-COPY wrapper.sh /usr/local/bin/
+COPY wrapper.sh /wrapper.sh
 
-RUN chmod +x /usr/local/bin/wrapper.sh
-RUN apt-get install -y jq
+RUN chmod +x /wrapper.sh
 
-CMD ["/usr/local/bin/wrapper.sh"]
+ENTRYPOINT ["/wrapper.sh"]

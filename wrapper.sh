@@ -1,29 +1,30 @@
-if [ $(cat .env | grep "key" | wc -l) -eq 0 ]; then
-    echo "Enter the api key"
-    read api_key
-    echo "\nkey=$api_key" >> .env
-    
-    api_key=$(cat .env | grep "key" | cut -d "=" -f 2)
-    latitude=$(cat .env | grep "LATITUDE" | cut -d "=" -f 2)
-    longitude=$(cat .env | grep "LONGITUDE" | cut -d "=" -f 2)
+#!/bin/sh
 
-else
-    api_key=$(cat .env | grep "key" | cut -d "=" -f 2)
-    latitude=$(cat .env | grep "LATITUDE" | cut -d "=" -f 2)
-    longitude=$(cat .env | grep "LONGITUDE" | cut -d "=" -f 2)
-fi
-
-echo "Paris Weather Report"
-curl -s "http://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=$api_key" | \
-jq -r '.weather[0].description, .main.temp_max, .main.temp_min, .main.feels_like, .main.humidity, .main.pressure, .wind.speed, .wind.deg, .visibility, .sys.sunrise, .sys.sunset' | \
-awk 'NR==1 {print "Description: " $0} 
-     NR==2 {print "Maximum Temperature: " $0 " °F"} 
-     NR==3 {print "Minimum Temperature: " $0 " °F"} 
-     NR==4 {print "Feels like: " $0 " °F"} 
-     NR==5 {print "Humidity: " $0 "%"} 
-     NR==6 {print "Pressure: " $0 " hPa"} 
-     NR==7 {print "Wind Speed: " $0 " m/s"} 
-     NR==8 {print "Wind Degree: " $0 "°"} 
-     NR==9 {print "Visibility: " $0 " m"} 
-     NR==10 {print "Sunrise: " strftime("%H:%M", $0)} 
-     NR==11 {print "Sunset: " strftime("%H:%M", $0)}'
+echo "Weather Report : LATITUDE: $LAT | LONGITUDE: $LONG"
+busybox wget -qO- "http://api.openweathermap.org/data/2.5/weather?lat=$LAT&lon=$LONG&appid=$API_KEY" | \
+busybox awk '
+    BEGIN { RS="[,{}]"; FS=":"; }
+    /description/ { gsub(/"/, "", $2); description = $2 }
+    /temp_max/ { gsub(/"/, "", $2); temp_max = $2 }
+    /temp_min/ { gsub(/"/, "", $2); temp_min = $2 }
+    /feels_like/ { gsub(/"/, "", $2); feels_like = $2 }
+    /humidity/ { gsub(/"/, "", $2); humidity = $2 }
+    /pressure/ { gsub(/"/, "", $2); pressure = $2 }
+    /speed/ { gsub(/"/, "", $2); speed = $2 }
+    /deg/ { gsub(/"/, "", $2); deg = $2 }
+    /visibility/ { gsub(/"/, "", $2); visibility = $2 }
+    /sunrise/ { gsub(/"/, "", $2); sunrise = $2 }
+    /sunset/ { gsub(/"/, "", $2); sunset = $2 }
+    END {
+        print "Description: " description
+        print "Maximum Temperature: " temp_max " °F"
+        print "Minimum Temperature: " temp_min " °F"
+        print "Feels like: " feels_like " °F"
+        print "Humidity: " humidity "%"
+        print "Pressure: " pressure " hPa"
+        print "Wind Speed: " speed " m/s"
+        print "Wind Degree: " deg "°"
+        print "Visibility: " visibility " m"
+        print "Sunrise: " strftime("%H:%M", sunrise)
+        print "Sunset: " strftime("%H:%M", sunset)
+    }'
